@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import javax.servlet.annotation.WebServlet;
 
@@ -11,6 +12,7 @@ import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.VaadinServletConfiguration;
 import com.vaadin.annotations.Widgetset;
 import com.vaadin.data.util.BeanItemContainer;
+import com.vaadin.data.util.converter.Converter;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServlet;
 import com.vaadin.ui.DateField;
@@ -27,15 +29,49 @@ import com.vaadin.ui.renderers.DateRenderer;
 @Widgetset("com.vaadin.MyAppWidgetset")
 public class MyUI extends UI {
 
+    public class Location {
+        String name;
+        String hiddenInfo;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String label) {
+            name = label;
+        }
+
+        public String getHiddenInfo() {
+            return hiddenInfo;
+        }
+
+        public void setHiddenInfo(String hiddenInfo) {
+            this.hiddenInfo = hiddenInfo;
+        }
+    }
+
     public class Bean {
 
         public Bean(String firstName, String lastName, Date dateOfBirth) {
             this.firstName = firstName;
             this.lastName = lastName;
             this.dateOfBirth = dateOfBirth;
+            location = new Location();
+            location.setName("foo");
+            location.setHiddenInfo("bar");
         }
 
         String firstName;
+
+        Location location;
+
+        public Location getLocation() {
+            return location;
+        }
+
+        public void setLocation(Location location) {
+            this.location = location;
+        }
 
         public String getFirstName() {
             return firstName;
@@ -96,6 +132,36 @@ public class MyUI extends UI {
         DateField df = new DateField();
         df.setDateFormat("yyyy-MMM-dd");
         dobColumn.setEditorField(df);
+
+        Column locationColumn = grid.getColumn("location");
+        locationColumn.setConverter(new Converter<String, Location>() {
+
+            @Override
+            public Location convertToModel(String value,
+                    Class<? extends Location> targetType, Locale locale)
+                            throws com.vaadin.data.util.converter.Converter.ConversionException {
+                // Not used in this example
+                return null;
+            }
+
+            @Override
+            public String convertToPresentation(Location value,
+                    Class<? extends String> targetType, Locale locale)
+                            throws com.vaadin.data.util.converter.Converter.ConversionException {
+                return value.name;
+            }
+
+            @Override
+            public Class<Location> getModelType() {
+                return Location.class;
+            }
+
+            @Override
+            public Class<String> getPresentationType() {
+                return String.class;
+            }
+
+        });
 
         layout.addComponent(grid);
     }
