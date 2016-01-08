@@ -1,1 +1,9 @@
-/target/
+**/.project
+**/.settings
+.metadata
+**/.classpath
+.project
+.settings
+**/.checkstyle
+**/.fbExcludeFilterFile
+**/target/
