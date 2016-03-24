@@ -11,6 +11,9 @@ import javax.servlet.annotation.WebServlet;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.VaadinServletConfiguration;
 import com.vaadin.annotations.Widgetset;
+import com.vaadin.data.fieldgroup.FieldGroup.CommitEvent;
+import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
+import com.vaadin.data.fieldgroup.FieldGroup.CommitHandler;
 import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.data.util.converter.Converter;
 import com.vaadin.server.VaadinRequest;
@@ -29,49 +32,15 @@ import com.vaadin.ui.renderers.DateRenderer;
 @Widgetset("com.vaadin.MyAppWidgetset")
 public class MyUI extends UI {
 
-    public class Location {
-        String name;
-        String hiddenInfo;
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String label) {
-            name = label;
-        }
-
-        public String getHiddenInfo() {
-            return hiddenInfo;
-        }
-
-        public void setHiddenInfo(String hiddenInfo) {
-            this.hiddenInfo = hiddenInfo;
-        }
-    }
-
     public class Bean {
 
         public Bean(String firstName, String lastName, Date dateOfBirth) {
             this.firstName = firstName;
             this.lastName = lastName;
             this.dateOfBirth = dateOfBirth;
-            location = new Location();
-            location.setName("foo");
-            location.setHiddenInfo("bar");
         }
 
         String firstName;
-
-        Location location;
-
-        public Location getLocation() {
-            return location;
-        }
-
-        public void setLocation(Location location) {
-            this.location = location;
-        }
 
         public String getFirstName() {
             return firstName;
@@ -103,13 +72,18 @@ public class MyUI extends UI {
 
     public List<Bean> getSomeBeans() {
         List<Bean> beanz = new ArrayList<Bean>();
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < 10; i++) {
             Bean bean = new Bean("first" + i, "last" + i, new Date());
             beanz.add(bean);
         }
+        beanz.add(getEmptyBean());
         return beanz;
     }
 
+    public Bean getEmptyBean() {
+    	return new Bean("", "", null);
+    }
+    
     public class DateEditorField extends DateField {
 
     }
@@ -119,7 +93,7 @@ public class MyUI extends UI {
         final VerticalLayout layout = new VerticalLayout();
         layout.setMargin(true);
         setContent(layout);
-        BeanItemContainer<Bean> bic = new BeanItemContainer<Bean>(Bean.class,
+        final BeanItemContainer<Bean> bic = new BeanItemContainer<Bean>(Bean.class,
                 getSomeBeans());
         Grid grid = new Grid();
         grid.setContainerDataSource(bic);
@@ -131,37 +105,21 @@ public class MyUI extends UI {
                 new DateRenderer(new SimpleDateFormat("yyyy-MMM-dd")));
         DateField df = new DateField();
         df.setDateFormat("yyyy-MMM-dd");
-        dobColumn.setEditorField(df);
+        grid.getEditorFieldGroup().addCommitHandler(new CommitHandler() {
 
-        Column locationColumn = grid.getColumn("location");
-        locationColumn.setConverter(new Converter<String, Location>() {
+			@Override
+			public void preCommit(CommitEvent commitEvent) throws CommitException {
+				// NOOP
+			}
 
-            @Override
-            public Location convertToModel(String value,
-                    Class<? extends Location> targetType, Locale locale)
-                            throws com.vaadin.data.util.converter.Converter.ConversionException {
-                // Not used in this example
-                return null;
-            }
-
-            @Override
-            public String convertToPresentation(Location value,
-                    Class<? extends String> targetType, Locale locale)
-                            throws com.vaadin.data.util.converter.Converter.ConversionException {
-                return value.name;
-            }
-
-            @Override
-            public Class<Location> getModelType() {
-                return Location.class;
-            }
-
-            @Override
-            public Class<String> getPresentationType() {
-                return String.class;
-            }
-
+			@Override
+			public void postCommit(CommitEvent commitEvent) throws CommitException {
+				// TODO Auto-generated method stub
+				bic.addBean(getEmptyBean());
+			}
+        	
         });
+        dobColumn.setEditorField(df);
 
         layout.addComponent(grid);
     }
