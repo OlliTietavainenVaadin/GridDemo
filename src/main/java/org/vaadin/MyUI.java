@@ -1,4 +1,4 @@
-package com.vaadin;
+package org.vaadin;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
